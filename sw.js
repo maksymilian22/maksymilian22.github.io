@@ -1,34 +1,28 @@
-const CACHE_NAME = 'mobywatel-cache-v2';
+const CACHE_NAME = 'app-cache-v3';
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/dashboard.html',
-  '/documents.html',
-  '/services.html',
-  '/qr.html',
-  '/more.html',
-  '/dowodnowy.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/pwa.js'
+  './',
+  './index.html',
+  './dashboard.html',
+  './documents.html',
+  './services.html',
+  './qr.html',
+  './more.html',
+  './dowodnowy.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './pwa.js'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -40,22 +34,22 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
 
       return fetch(event.request)
-        .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+        .then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
           }
 
-          const copy = response.clone();
+          const copy = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
+          return networkResponse;
         })
-        .catch(() => caches.match('/index.html'));
+        .catch(() => caches.match('./index.html'));
     })
   );
 });

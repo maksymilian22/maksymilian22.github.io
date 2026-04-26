@@ -3,9 +3,11 @@
     return;
   }
 
+  const swUrl = new URL('sw.js', window.location.href);
+
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.register(swUrl.pathname, { scope: './' });
     } catch (error) {
       console.error('Nie udało się zarejestrować Service Workera:', error);
     }
@@ -13,16 +15,16 @@
 
   let deferredPrompt = null;
 
-  const installButton = document.createElement('button');
-  installButton.type = 'button';
-  installButton.textContent = 'Zainstaluj aplikację';
-  installButton.setAttribute('aria-label', 'Zainstaluj aplikację');
-  installButton.style.cssText = [
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = 'Zainstaluj aplikację';
+  button.setAttribute('aria-label', 'Zainstaluj aplikację');
+  button.style.cssText = [
     'position:fixed',
     'right:16px',
     'bottom:96px',
     'z-index:10000',
-    'display:none',
+    'display:block',
     'padding:12px 16px',
     'border:none',
     'border-radius:999px',
@@ -34,29 +36,32 @@
     'cursor:pointer'
   ].join(';');
 
-  installButton.addEventListener('click', async () => {
+  const showManualInstallInfo = () => {
+    alert('Jeśli nie pojawia się okno instalacji, otwórz menu przeglądarki (⋮) i wybierz "Dodaj do ekranu głównego" lub "Zainstaluj aplikację".');
+  };
+
+  button.addEventListener('click', async () => {
     if (!deferredPrompt) {
+      showManualInstallInfo();
       return;
     }
 
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
-    installButton.style.display = 'none';
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.body.appendChild(installButton);
+    document.body.appendChild(button);
   });
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    installButton.style.display = 'block';
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    installButton.style.display = 'none';
+    button.style.display = 'none';
   });
 })();
