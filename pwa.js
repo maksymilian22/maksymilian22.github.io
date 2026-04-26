@@ -1,18 +1,4 @@
 (() => {
-  if (!('serviceWorker' in navigator)) {
-    return;
-  }
-
-  const swUrl = new URL('sw.js', window.location.href);
-
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register(swUrl.pathname, { scope: './' });
-    } catch (error) {
-      console.error('Nie udało się zarejestrować Service Workera:', error);
-    }
-  });
-
   let deferredPrompt = null;
 
   const button = document.createElement('button');
@@ -51,9 +37,29 @@
     deferredPrompt = null;
   });
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.body.appendChild(button);
-  });
+  const attachButton = () => {
+    if (!document.body.contains(button)) {
+      document.body.appendChild(button);
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachButton);
+  } else {
+    attachButton();
+  }
+
+  if ('serviceWorker' in navigator) {
+    const swUrl = new URL('sw.js', window.location.href);
+
+    window.addEventListener('load', async () => {
+      try {
+        await navigator.serviceWorker.register(swUrl.pathname, { scope: './' });
+      } catch (error) {
+        console.error('Nie udało się zarejestrować Service Workera:', error);
+      }
+    });
+  }
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
